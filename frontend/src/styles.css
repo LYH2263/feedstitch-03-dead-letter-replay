@@ -104,6 +104,7 @@ select, input {
 .tag.danger { background: color-mix(in srgb, var(--danger) 25%, transparent); color: var(--danger); }
 .tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.75rem; margin-bottom: 1rem; }
 .tile { background: var(--panel); padding: 1rem; border-radius: 10px; }
+.small { font-size: 0.72rem; margin-top: 0.35rem; }
 @media (max-width: 860px) {
   .layout-pipe { grid-template-columns: 1fr; }
   .pipe-rail { flex-direction: row; flex-wrap: wrap; border-right: 0; border-bottom: 1px solid color-mix(in srgb, var(--accent) 28%, transparent); }

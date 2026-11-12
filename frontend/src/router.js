@@ -7,6 +7,7 @@ import Staging from './pages/Staging.vue'
 import Conflicts from './pages/Conflicts.vue'
 import Canonical from './pages/Canonical.vue'
 import Watermarks from './pages/Watermarks.vue'
+import ReplayBatches from './pages/ReplayBatches.vue'
 
 export default createRouter({
   history: createWebHistory(),
@@ -17,6 +18,7 @@ export default createRouter({
     { path: '/workbench', component: Workbench },
     { path: '/staging', component: Staging },
     { path: '/conflicts', component: Conflicts },
+    { path: '/replay-batches', component: ReplayBatches },
     { path: '/canonical', component: Canonical },
     { path: '/watermarks', component: Watermarks },
   ],

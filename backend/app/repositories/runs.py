@@ -166,14 +166,24 @@ def insert_conflict(
     )
 
 
-def list_conflicts(conn: sqlite3.Connection) -> list[dict[str, Any]]:
-    rows = conn.execute(
-        """
-        SELECT id, run_id, source_id, business_key, existing_payload, incoming_payload,
-               reason, created_at
-        FROM conflicts ORDER BY id DESC
-        """
-    ).fetchall()
+def list_conflicts(conn: sqlite3.Connection, status: str | None = None) -> list[dict[str, Any]]:
+    if status is None:
+        rows = conn.execute(
+            """
+            SELECT id, run_id, source_id, business_key, existing_payload, incoming_payload,
+                   reason, created_at, status, resolution, resolved_at, result_note, replay_batch_id
+            FROM conflicts ORDER BY id DESC
+            """
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            """
+            SELECT id, run_id, source_id, business_key, existing_payload, incoming_payload,
+                   reason, created_at, status, resolution, resolved_at, result_note, replay_batch_id
+            FROM conflicts WHERE status = ? ORDER BY id DESC
+            """,
+            (status,),
+        ).fetchall()
     out = []
     for r in rows:
         d = dict(r)
@@ -181,3 +191,31 @@ def list_conflicts(conn: sqlite3.Connection) -> list[dict[str, Any]]:
         d["incoming"] = json.loads(d.pop("incoming_payload"))
         out.append(d)
     return out
+
+
+def get_conflict(conn: sqlite3.Connection, conflict_id: int) -> dict[str, Any] | None:
+    row = conn.execute(
+        """
+        SELECT id, run_id, source_id, business_key, existing_payload, incoming_payload,
+               reason, created_at, status, resolution, resolved_at, result_note, replay_batch_id
+        FROM conflicts WHERE id = ?
+        """,
+        (conflict_id,),
+    ).fetchone()
+    if not row:
+        return None
+    d = dict(row)
+    d["existing"] = json.loads(d.pop("existing_payload"))
+    d["incoming"] = json.loads(d.pop("incoming_payload"))
+    return d
+
+
+def conflict_status_counts(conn: sqlite3.Connection) -> dict[str, int]:
+    rows = conn.execute(
+        "SELECT status, COUNT(*) c FROM conflicts GROUP BY status"
+    ).fetchall()
+    counts = {"pending": 0, "adjudicated": 0, "replayed": 0}
+    for r in rows:
+        counts[r["status"]] = int(r["c"])
+    counts["total"] = sum(counts.values())
+    return counts

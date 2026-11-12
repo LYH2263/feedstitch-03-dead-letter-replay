@@ -6,3 +6,6 @@ frontend/dist/
 .pytest_cache/
 *.db
 backend/data/
+
+npm-cache/
+.npm-cache/

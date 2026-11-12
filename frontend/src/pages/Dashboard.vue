@@ -21,11 +21,20 @@ onMounted(async () => {
     <div class="tiles" v-if="stats">
       <div class="tile"><div class="hero-num">{{ stats.source_count }}</div><div class="muted">源</div></div>
       <div class="tile"><div class="hero-num">{{ stats.canonical_count }}</div><div class="muted">Canonical</div></div>
-      <div class="tile"><div class="hero-num">{{ stats.conflict_count }}</div><div class="muted">冲突</div></div>
+      <div class="tile">
+        <div class="hero-num">{{ stats.conflict_count }}</div><div class="muted">冲突（总数）</div>
+        <div class="muted mono small">
+          待处理 {{ stats.conflict_pending_count }} ·
+          已裁决 {{ stats.conflict_adjudicated_count }} ·
+          已处理 {{ stats.conflict_replayed_count }}
+        </div>
+      </div>
       <div class="tile"><div class="hero-num">{{ stats.run_count }}</div><div class="muted">Runs</div></div>
+      <div class="tile"><div class="hero-num">{{ stats.replay_batch_count }}</div><div class="muted">重放批次</div></div>
       <div class="tile"><div class="hero-num">{{ stats.staging_count }}</div><div class="muted">Staging</div></div>
       <div class="tile"><div class="hero-num">{{ stats.enabled_sources }}</div><div class="muted">启用源</div></div>
     </div>
     <router-link to="/workbench">去运行台跑一趟 →</router-link>
+    <router-link to="/conflicts" style="margin-left:1rem">去冲突队列裁决/重放 →</router-link>
   </div>
 </template>

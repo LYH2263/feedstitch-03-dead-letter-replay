@@ -11,3 +11,13 @@ class LookbackUpdate(BaseModel):
 
 class SettingUpdate(BaseModel):
     value: str
+
+
+class AdjudicationRequest(BaseModel):
+    conflict_ids: list[int] = Field(min_length=1)
+    resolution: str = Field(pattern="^(overwrite|keep|discard)$")
+    note: str | None = None
+
+
+class ReplayRequest(BaseModel):
+    conflict_ids: list[int] = Field(min_length=1)

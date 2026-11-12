@@ -1,6 +1,23 @@
 from app.db import connect
 
 
+# Columns added to the original conflicts table for the dead-letter replay flow.
+CONFLICT_ADDED_COLUMNS = {
+    "status": "TEXT NOT NULL DEFAULT 'pending'",
+    "resolution": "TEXT",
+    "resolved_at": "TEXT",
+    "result_note": "TEXT",
+    "replay_batch_id": "INTEGER",
+}
+
+
+def _migrate_conflicts(conn) -> None:
+    existing = {r["name"] for r in conn.execute("PRAGMA table_info(conflicts)").fetchall()}
+    for name, ddl in CONFLICT_ADDED_COLUMNS.items():
+        if name not in existing:
+            conn.execute(f"ALTER TABLE conflicts ADD COLUMN {name} {ddl}")
+
+
 def init_db():
     conn = connect()
     conn.executescript(
@@ -61,10 +78,38 @@ def init_db():
             existing_payload TEXT NOT NULL,
             incoming_payload TEXT NOT NULL,
             reason TEXT NOT NULL,
-            created_at TEXT NOT NULL
+            created_at TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'pending',
+            resolution TEXT,
+            resolved_at TEXT,
+            result_note TEXT,
+            replay_batch_id INTEGER
+        );
+        CREATE TABLE IF NOT EXISTS replay_batches(
+            id INTEGER PRIMARY KEY,
+            status TEXT NOT NULL,
+            total_count INTEGER NOT NULL,
+            written_count INTEGER NOT NULL,
+            closed_count INTEGER NOT NULL,
+            discarded_count INTEGER NOT NULL,
+            canonical_before INTEGER NOT NULL,
+            canonical_after INTEGER NOT NULL,
+            report_json TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            finished_at TEXT
+        );
+        CREATE TABLE IF NOT EXISTS replay_batch_items(
+            id INTEGER PRIMARY KEY,
+            batch_id INTEGER NOT NULL,
+            conflict_id INTEGER NOT NULL,
+            business_key TEXT NOT NULL,
+            resolution TEXT NOT NULL,
+            canonical_changed INTEGER NOT NULL,
+            result_note TEXT NOT NULL
         );
         """
     )
+    _migrate_conflicts(conn)
     if conn.execute("SELECT COUNT(*) c FROM sources").fetchone()["c"] == 0:
         conn.executemany(
             """

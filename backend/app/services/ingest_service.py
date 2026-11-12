@@ -186,11 +186,18 @@ def dashboard_stats() -> dict[str, Any]:
     conn = connect()
     try:
         sources = sources_repo.list_sources(conn)
+        conflict_counts = runs_repo.conflict_status_counts(conn)
         return {
             "source_count": len(sources),
             "enabled_sources": sum(1 for s in sources if s["enabled"]),
             "canonical_count": canon_repo.count_items(conn),
-            "conflict_count": conn.execute("SELECT COUNT(*) c FROM conflicts").fetchone()["c"],
+            "conflict_count": conflict_counts["total"],
+            "conflict_pending_count": conflict_counts["pending"],
+            "conflict_adjudicated_count": conflict_counts["adjudicated"],
+            "conflict_replayed_count": conflict_counts["replayed"],
+            "replay_batch_count": conn.execute(
+                "SELECT COUNT(*) c FROM replay_batches"
+            ).fetchone()["c"],
             "run_count": conn.execute("SELECT COUNT(*) c FROM runs").fetchone()["c"],
             "staging_count": conn.execute("SELECT COUNT(*) c FROM staging_rows").fetchone()["c"],
         }
